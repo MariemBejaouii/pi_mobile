@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">PiApp</string>
+    <string name="title_activity_sign_up">SignUpActivity</string>
+    <string name="title_activity_signup">signup</string>
+    <string name="title_activity_home_screen">HomeScreen</string>
+    <string name="title_activity_login">Login</string>
+
+</resources>
