@@ -18,9 +18,12 @@ import com.example.piapp.entities.UserEntity;
 
 public class login extends AppCompatActivity {
 
-    EditText email , password;
-    AppCompatButton buttonLogin , buttonSignup;
-    CheckBox remember;
+    EditText email, password;
+    AppCompatButton buttonLogin, buttonSignup;
+    CheckBox mCheckBoxRemember;
+
+    private SharedPreferences mPrefs;
+    private static final String PREFS_NAME = "PrefsFile";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,21 +33,28 @@ public class login extends AppCompatActivity {
         password = findViewById(R.id.password);
         buttonLogin = findViewById(R.id.buttonLogin);
         buttonSignup = findViewById(R.id.buttonSignup);
-        remember=findViewById(R.id.rememberMe);
+        mCheckBoxRemember = findViewById(R.id.rememberMe);
+        mPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-        SharedPreferences preferences = getSharedPreferences("checkbox" , MODE_PRIVATE);
-        String checkbox=preferences.getString("remember", "");
+       boolean rememberMe = mPrefs.getBoolean("remember", false);
+        mCheckBoxRemember.setChecked(rememberMe);
+        // Si "Se souvenir de moi" est coché, restaurer l'e-mail et le mot de passe précédemment enregistrés
+        if (rememberMe) {
+            String savedEmail = mPrefs.getString("email", "");
+            String savedPassword = mPrefs.getString("password", "");
 
-
-        if(checkbox.equals("true")) {
-            Intent intent=new Intent(login.this , profile.class);
-            startActivity(intent);
-
+            email.setText(savedEmail);
+            password.setText(savedPassword);
         }
-        else if(checkbox.equals("false")) {
-            Toast.makeText(this , "Please sign in .", Toast.LENGTH_SHORT).show();
-        }
 
+        mCheckBoxRemember.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferences.Editor editor = mPrefs.edit();
+                editor.putBoolean("remember", isChecked);
+                editor.apply();
+            }
+        });
 
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,23 +81,19 @@ public class login extends AppCompatActivity {
                                     }
                                 });
                             } else {
-                                String email = userEntity.getEmail();
-                                String fullName = userEntity.getFullName();
-                                String phoneNumber = userEntity.getPhoneNumber();
-
-                                // Mettre à jour les SharedPreferences ici si "rememberMe" est coché
-                                if (remember.isChecked()) {
-                                    SharedPreferences preferences = getSharedPreferences("checkbox", MODE_PRIVATE);
-                                    SharedPreferences.Editor editor = preferences.edit();
-                                    editor.putString("remember", "true");
-                                    editor.apply();
-                                }
+                                // Enregistrez les données de l'utilisateur dans les préférences partagées lors de la connexion
+                                SharedPreferences.Editor editor = mPrefs.edit();
+                                editor.putString("email", emailText);
+                                editor.putString("fullName", userEntity.getFullName());
+                                editor.putString("phoneNumber", userEntity.getPhoneNumber());
+                                editor.putString("password", passwordText); // Ajout du mot de passe
+                                editor.apply();
 
                                 startActivity(new Intent(
                                                 login.this, profile.class
-                                        ).putExtra("email", email)
-                                                .putExtra("fullName", fullName)
-                                                .putExtra("phoneNumber", phoneNumber)
+                                        ).putExtra("email", emailText)
+                                                .putExtra("fullName", userEntity.getFullName())
+                                                .putExtra("phoneNumber", userEntity.getPhoneNumber())
                                 );
                             }
                         }
@@ -96,40 +102,11 @@ public class login extends AppCompatActivity {
             }
         });
 
-
         buttonSignup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(login.this , signup.class));
+                startActivity(new Intent(login.this, signup.class));
             }
         });
-
-
-        remember.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
-        {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton , boolean b ) {
-
-                if(compoundButton.isChecked())
-                {
-                    SharedPreferences preferences= getSharedPreferences("checkbox", MODE_PRIVATE);
-                    SharedPreferences.Editor editor=preferences.edit();
-                    editor.putString("remember", "true");
-                    editor.apply();
-                    Toast.makeText(login.this, "Checked", Toast.LENGTH_SHORT).show();
-
-                }
-                else if(!compoundButton.isChecked()) {
-                    SharedPreferences preferences= getSharedPreferences("checkbox", MODE_PRIVATE);
-                    SharedPreferences.Editor editor=preferences.edit();
-                    editor.putString("remember", "false");
-                    editor.apply();
-                    Toast.makeText(login.this, "Unchecked", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
     }
-
-
 }
